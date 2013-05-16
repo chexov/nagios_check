@@ -39,7 +39,7 @@ if len(sys.argv) != 2:
 
 config_fn = sys.argv[1]
 
-cp = configparser.ConfigParser()
+cp = configparser.ConfigParser(interpolation=None)
 cp.read(config_fn)
 if not SECTION_STATUS in cp.sections():
     cp.add_section(SECTION_STATUS)
@@ -50,16 +50,19 @@ for check, cmd in cp.items(SECTION_CHECKS):
     e = p.wait()
     try:
         old_e = cp.getint(SECTION_STATUS, check+"_e")
-    except ConfigParser.NoOptionError:
+    except configparser.NoOptionError:
         old_e = -1
 
-    cp.set(SECTION_STATUS, check, out.splitlines()[0])
-    cp.set(SECTION_STATUS, check+"_e", e)
+    if out:
+        cp.set(SECTION_STATUS, check, out.splitlines()[0].decode())
+    else:
+        cp.set(SECTION_STATUS, check, out.decode())
+    cp.set(SECTION_STATUS, check+"_e", str(e))
 
     if old_e != e:
-        print ("XXX: send notification email")
+        print ("XXX: send notification email for ", check)
 
-    print (old_e, e, check, cmd, out.splitlines()[0])
+    print (old_e, e, check, cmd, out)
 
 cp.write(open(config_fn, 'w'))
 
