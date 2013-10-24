@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+# encoding: utf-8
+
 import sys
+import copy
+import shlex
 import subprocess
 try:
     #py2
@@ -33,11 +37,12 @@ SECTION_STATUS = "status"
 SECTION_CHECKS = "checks"
 
 
-if len(sys.argv) != 2:
-    print ("Usage: {0} <nagios_check.cfg".format(sys.argv[0]))
+if len(sys.argv) < 3:
+    print ("Usage: {0} <nagios_check.cfg> <notify_command>".format(sys.argv[0]))
     sys.exit(1)
 
 config_fn = sys.argv[1]
+notify_cmd = sys.argv[2:]
 
 cp = configparser.ConfigParser(interpolation=None)
 cp.read(config_fn)
@@ -60,9 +65,13 @@ for check, cmd in cp.items(SECTION_CHECKS):
     cp.set(SECTION_STATUS, check+"_e", str(e))
 
     if old_e != e:
-        print ("XXX: send notification email for ", check)
+        _cmd = copy.deepcopy(notify_cmd)
+        _cmd.extend([cp.get(SECTION_STATUS, check)] )
+        _cmd = ' '.join(_cmd)
+        print ("# debug " + check + " : notification cmd: ", _cmd)
+        subprocess.check_output(shlex.split(_cmd))
 
-    print (old_e, e, check, cmd, out)
+    print ("# debug: {old_e}=>{e} {check} {cmd} {out}".format(old_e=old_e, e=e, check=check, cmd=cmd, out=out))
 
 cp.write(open(config_fn, 'w'))
 
