@@ -66,10 +66,10 @@ for check, cmd in cp.items(SECTION_CHECKS):
 
     if old_e != e:
         _cmd = copy.deepcopy(notify_cmd)
-        _cmd.extend([cp.get(SECTION_STATUS, check)] )
-        _cmd = ' '.join(_cmd)
-        print ("# debug " + check + " : notification cmd: ", _cmd)
-        subprocess.check_output(shlex.split(_cmd))
+        _cmd.extend([str(e), check, cp.get(SECTION_STATUS, check)] )
+        #_cmd = ' '.join(_cmd)
+        print ("# debug !!! " + check + " : notification cmd: ", _cmd)
+        subprocess.check_output(_cmd) #shlex.split(_cmd))
 
     print ("# debug: {old_e}=>{e} {check} {cmd} {out}".format(old_e=old_e, e=e, check=check, cmd=cmd, out=out))
 
